@@ -1,19 +1,37 @@
 package com.example.animationproject;
 
+import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.work.ExistingPeriodicWorkPolicy;
+import androidx.work.PeriodicWorkRequest;
+import androidx.work.WorkManager;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.app.Activity;
+import android.app.Dialog;
+import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.view.Gravity;
+import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.Window;
+import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
+import android.widget.Button;
 import android.widget.LinearLayout;
+import android.widget.PopupWindow;
+import android.widget.Toast;
+
+import java.util.concurrent.TimeUnit;
 
 public class MainActivity2 extends AppCompatActivity {
+
+    private Button dd;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -24,6 +42,43 @@ public class MainActivity2 extends AppCompatActivity {
 
         click = findViewById(R.id.click);
         changes = findViewById(R.id.change);
+        dd = findViewById(R.id.dd);
+
+        Dialog dialog = new Dialog(this, R.style.MyDialogTheme);
+        dialog.setContentView(R.layout.sample);
+        View popupView = getLayoutInflater().inflate(R.layout.sample, null);
+        PopupWindow popupWindow = new PopupWindow(popupView, ViewGroup.LayoutParams.WRAP_CONTENT, ViewGroup.LayoutParams.WRAP_CONTENT);
+        popupWindow.setOutsideTouchable(true);
+
+        dd.setOnClickListener(view -> {
+
+            if (dialog.isShowing()==false){
+
+                Toast.makeText(this, "", Toast.LENGTH_SHORT).show();
+
+                popupWindow.showAsDropDown(dd);
+
+            }else {
+                 // allow the PopupWindow to be closed when clicked outside
+
+                // Show the PopupWindow just below the anchorView
+
+
+                dialog.dismiss();
+            }
+
+
+
+
+
+
+
+            // Set the dialog to be full width
+
+            // Show the dialog
+            //dialog.show();
+
+        });
 
 
         click.setOnClickListener(view -> {
@@ -35,6 +90,27 @@ public class MainActivity2 extends AppCompatActivity {
                 expandView(changes);
             }
         });
+
+
+//        Intent serviceIntent = new Intent(this, ToastService.class);
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+//            startForegroundService(serviceIntent);
+//        } else {
+//            startService(serviceIntent);
+//        }
+
+        PeriodicWorkRequest periodicWorkRequest =
+                new PeriodicWorkRequest.Builder(NotificationWorker.class, 3, TimeUnit.SECONDS)
+                        .addTag("notification_work_tag")
+                        .build();
+
+        // Enqueue the periodic work request
+        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+                "notification_work_tag",
+                ExistingPeriodicWorkPolicy.REPLACE,
+                periodicWorkRequest
+        );
+
 
     }
 
