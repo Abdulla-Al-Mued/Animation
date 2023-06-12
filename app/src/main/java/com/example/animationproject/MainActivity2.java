@@ -10,10 +10,14 @@ import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
 import android.animation.ValueAnimator;
 import android.app.Activity;
+import android.app.AlarmManager;
 import android.app.Dialog;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.SystemClock;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -31,7 +35,10 @@ import java.util.concurrent.TimeUnit;
 
 public class MainActivity2 extends AppCompatActivity {
 
+    private static final long NOTIFICATION_INTERVAL = 30*1000;
     private Button dd;
+    private PendingIntent notificationIntent;
+    private AlarmManager alarmManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -67,12 +74,6 @@ public class MainActivity2 extends AppCompatActivity {
                 dialog.dismiss();
             }
 
-
-
-
-
-
-
             // Set the dialog to be full width
 
             // Show the dialog
@@ -91,25 +92,36 @@ public class MainActivity2 extends AppCompatActivity {
             }
         });
 
+        // Get the AlarmManager instance
+        alarmManager = (AlarmManager) getSystemService(Context.ALARM_SERVICE);
 
-//        Intent serviceIntent = new Intent(this, ToastService.class);
+        // Create the intent for the broadcast receiver
+        Intent intent = new Intent(this, NotificationBroadcastReceiver.class);
+        notificationIntent = PendingIntent.getBroadcast(this, 0, intent, PendingIntent.FLAG_IMMUTABLE);
+
+        // Schedule the repeating alarm
+        long triggerTime = SystemClock.elapsedRealtime() + NOTIFICATION_INTERVAL;
+        alarmManager.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, triggerTime, NOTIFICATION_INTERVAL, notificationIntent);
+
+
+
 //        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 //            startForegroundService(serviceIntent);
 //        } else {
 //            startService(serviceIntent);
 //        }
 
-        PeriodicWorkRequest periodicWorkRequest =
-                new PeriodicWorkRequest.Builder(NotificationWorker.class, 3, TimeUnit.SECONDS)
-                        .addTag("notification_work_tag")
-                        .build();
-
-        // Enqueue the periodic work request
-        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
-                "notification_work_tag",
-                ExistingPeriodicWorkPolicy.REPLACE,
-                periodicWorkRequest
-        );
+//        PeriodicWorkRequest periodicWorkRequest =
+//                new PeriodicWorkRequest.Builder(NotificationWorker.class, 3, TimeUnit.MILLISECONDS)
+//                        .addTag("notification_work_tag")
+//                        .build();
+//
+//        // Enqueue the periodic work request
+//        WorkManager.getInstance(this).enqueueUniquePeriodicWork(
+//                "notification_work_tag",
+//                ExistingPeriodicWorkPolicy.KEEP,
+//                periodicWorkRequest
+//        );
 
 
     }
@@ -189,5 +201,12 @@ public class MainActivity2 extends AppCompatActivity {
         view.measure(widthMeasureSpec, heightMeasureSpec);
         int height = view.getMeasuredHeight();
         return height;
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+//        Intent serviceIntent = new Intent(this, ToastService.class);
+//        startService(serviceIntent);
     }
 }
